@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Habit Tracker - Streak System</title>
+
+<style>
+body{
+    margin:0;
+    font-family: Arial, Helvetica, sans-serif;
+    background:#0f172a;
+    color:white;
+}
+
+header{
+    background:#020617;
+    padding:20px;
+    text-align:center;
+    font-size:24px;
+    font-weight:bold;
+    letter-spacing:1px;
+}
+
+.container{
+    width:90%;
+    max-width:900px;
+    margin:auto;
+    margin-top:30px;
+}
+
+.input-box{
+    display:flex;
+    gap:10px;
+    margin-bottom:25px;
+}
+
+input{
+    flex:1;
+    padding:12px;
+    border-radius:10px;
+    border:none;
+    outline:none;
+    font-size:16px;
+}
+
+button{
+    padding:12px 18px;
+    border:none;
+    border-radius:10px;
+    background:#38bdf8;
+    color:black;
+    font-weight:bold;
+    cursor:pointer;
+}
+
+button:hover{
+    background:#0ea5e9;
+}
+
+.habit{
+    background:#020617;
+    padding:18px;
+    border-radius:15px;
+    margin-bottom:15px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+}
+
+.habit-left{
+    display:flex;
+    flex-direction:column;
+}
+
+.habit-name{
+    font-size:18px;
+    font-weight:bold;
+}
+
+.streak{
+    font-size:14px;
+    color:#38bdf8;
+}
+
+.progress{
+    width:100%;
+    height:6px;
+    background:#1e293b;
+    border-radius:5px;
+    margin-top:8px;
+}
+
+.progress-bar{
+    height:100%;
+    width:0%;
+    background:#38bdf8;
+    border-radius:5px;
+}
+
+.stats{
+    background:#020617;
+    padding:20px;
+    border-radius:15px;
+    margin-bottom:25px;
+}
+
+.stat-box{
+    display:flex;
+    justify-content:space-between;
+    margin-top:10px;
+}
+</style>
+</head>
+<body>
+
+<header>Habit Tracker with Streak System</header>
+
+<div class="container">
+
+<div class="stats">
+<h3>Progress Dashboard</h3>
+<div class="stat-box"><span>Total Habits:</span><span id="totalHabits">0</span></div>
+<div class="stat-box"><span>Completed Today:</span><span id="doneToday">0</span></div>
+<div class="stat-box"><span>Best Streak:</span><span id="bestStreak">0</span></div>
+</div>
+
+<div class="input-box">
+<input id="habitInput" placeholder="Enter a new habit (Study, Workout, Coding...)" />
+<button onclick="addHabit()">Add Habit</button>
+</div>
+
+<div id="habitList"></div>
+
+</div>
+
+<script>
+let habits = JSON.parse(localStorage.getItem("habits")) || [];
+
+function saveHabits(){
+    localStorage.setItem("habits", JSON.stringify(habits));
+}
+
+function updateStats(){
+    document.getElementById("totalHabits").innerText = habits.length;
+
+    let done = habits.filter(h => h.doneToday).length;
+    document.getElementById("doneToday").innerText = done;
+
+    let best = 0;
+    habits.forEach(h => {
+        if(h.bestStreak > best) best = h.bestStreak;
+    });
+    document.getElementById("bestStreak").innerText = best;
+}
+
+function addHabit(){
+    let input = document.getElementById("habitInput");
+    let name = input.value.trim();
+
+    if(name === "") return;
+
+    habits.push({
+        name:name,
+        streak:0,
+        bestStreak:0,
+        doneToday:false
+    });
+
+    input.value="";
+    saveHabits();
+    renderHabits();
+}
+
+function markDone(index){
+    if(!habits[index].doneToday){
+        habits[index].doneToday = true;
+        habits[index].streak++;
+
+        if(habits[index].streak > habits[index].bestStreak)
+            habits[index].bestStreak = habits[index].streak;
+    }
+
+    saveHabits();
+    renderHabits();
+}
+
+function deleteHabit(index){
+    habits.splice(index,1);
+    saveHabits();
+    renderHabits();
+}
+
+function renderHabits(){
+    let list = document.getElementById("habitList");
+    list.innerHTML="";
+
+    habits.forEach((habit,index)=>{
+
+        let progress = Math.min(habit.streak * 5, 100);
+
+        list.innerHTML += `
+        <div class="habit">
+
+        <div class="habit-left">
+        <div class="habit-name">${habit.name}</div>
+        <div class="streak">Streak: ${habit.streak} days | Best: ${habit.bestStreak}</div>
+        <div class="progress"><div class="progress-bar" style="width:${progress}%"></div></div>
+        </div>
+
+        <div>
+        <button onclick="markDone(${index})">Done</button>
+        <button onclick="deleteHabit(${index})" style="background:#ef4444;color:white">Delete</button>
+        </div>
+
+        </div>`;
+    });
+
+    updateStats();
+}
+
+renderHabits();
+</script>
+
+</body>
+</html>
